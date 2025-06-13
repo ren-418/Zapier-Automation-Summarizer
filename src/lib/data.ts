@@ -86,12 +86,16 @@ export async function addPost(post: Omit<Post, 'id' | 'date'>): Promise<Post> {
 
   // Send to Zapier webhook
   try {
-    const webhookUrl = "https://hooks.zapier.com/hooks/catch/23333155/uy05gja/"; // Hardcoded for testing
-    await sendWebhookWithRetry(webhookUrl, {
-      title: post.title,
-      content: post.content,
-      timestamp: newPost.date.toISOString(),
-    });
+    const webhookUrl = process.env.ZAPIER_WEBHOOK_URL;
+    if (!webhookUrl) {
+      console.warn('Zapier webhook URL not configured. Skipping webhook notification.');
+    } else {
+      await sendWebhookWithRetry(webhookUrl, {
+        title: post.title,
+        content: post.content,
+        timestamp: newPost.date.toISOString(),
+      });
+    }
   } catch (error) {
     // Log the error but don't fail the post creation
     console.error('Failed to send post to Zapier webhook:', error);

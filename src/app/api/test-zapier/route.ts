@@ -18,7 +18,14 @@ interface BlogPostPayload {
 
 export async function GET() {
   try {
-    const webhookUrl = "https://hooks.zapier.com/hooks/catch/23333155/uy05gja/"; // Hardcoded for testing
+    const webhookUrl = process.env.ZAPIER_WEBHOOK_URL;
+
+    if (!webhookUrl) {
+      return NextResponse.json(
+        { error: 'Zapier webhook URL not configured' },
+        { status: 500 }
+      );
+    }
 
     console.log('Sending test blog post to Zapier webhook:', webhookUrl);
 
