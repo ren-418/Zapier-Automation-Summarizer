@@ -74,6 +74,8 @@ async function sendWebhookWithRetry(url: string, data: WebhookData, maxRetries =
   return false;
 }
 
+import { classifyAndSend } from './classifyAndSend';
+
 // Add a new post
 export async function addPost(post: Omit<Post, 'id' | 'date'>): Promise<Post> {
   const newPost: Post = {
@@ -99,6 +101,18 @@ export async function addPost(post: Omit<Post, 'id' | 'date'>): Promise<Post> {
   } catch (error) {
     // Log the error but don't fail the post creation
     console.error('Failed to send post to Zapier webhook:', error);
+  }
+
+  // Call classifyAndSend after sending to Zapier
+  try {
+    const classificationSummary = `New blog post: ${post.title}. Content preview: ${post.content.substring(0, 100)}...`;
+    const classificationLink = `http://localhost:3000/posts/${newPost.id}`; // Placeholder link
+
+    console.log('Calling classifyAndSend...');
+    const classificationResult = await classifyAndSend(classificationSummary, classificationLink);
+    console.log('classifyAndSend result:', classificationResult);
+  } catch (classificationError) {
+    console.error('Error calling classifyAndSend:', classificationError);
   }
 
   return newPost;
