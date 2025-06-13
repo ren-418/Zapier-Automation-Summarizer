@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
+    
     // Validate required fields
     if (!body.title || !body.content) {
       return NextResponse.json(
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const newPost = addPost({
+    const newPost = await addPost({
       title: body.title,
       content: body.content,
     });
