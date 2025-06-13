@@ -21,6 +21,9 @@ export async function POST(request: Request) {
       type = 'Team';
     }
 
+    console.log(`Received summary: "${summary}"`);
+    console.log(`Classified as: "${type}"`);
+
     return NextResponse.json({ type });
   } catch (error) {
     console.error('Error in classify API route:', error);
