@@ -2,6 +2,54 @@ interface ClassificationResult {
   type: "Product" | "Team" | "Other";
 }
 
+/**
+ * Sends a formatted message to a Discord webhook.
+ * @param summary The summary of the event.
+ * @param type The classified type (e.g., "Product", "Team").
+ * @param link A link relevant to the event.
+ * @returns A promise that resolves to true on success, false on failure.
+ */
+async function sendToDiscord(summary: string, type: "Product" | "Team" | "Other", link: string): Promise<boolean> {
+  const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!discordWebhookUrl) {
+    console.warn('DISCORD_WEBHOOK_URL not configured. Skipping Discord notification.');
+    return false;
+  }
+
+  const formattedSummary = summary.length > 200 ? summary.substring(0, 197) + '...' : summary; // Shorten if too long
+
+  const discordPayload = {
+    content: `**${type} Update!**\nSummary: ${formattedSummary}\nLink: <${link}>`,
+    embeds: [{
+      title: `${type} Update`,
+      description: formattedSummary,
+      url: link,
+      color: type === "Product" ? 3447003 : (type === "Team" ? 16752000 : 8355711) // Blue for Product, Orange for Team, Gray for Other
+    }]
+  };
+
+  try {
+    const discordResponse = await fetch(discordWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(discordPayload),
+    });
+
+    if (!discordResponse.ok) {
+      const discordErrorText = await discordResponse.text();
+      console.error('Failed to send to Discord webhook:', { status: discordResponse.status, error: discordErrorText });
+      return false;
+    }
+    console.log('Successfully sent to Discord webhook.');
+    return true;
+  } catch (error) {
+    console.error('Error sending to Discord webhook:', error);
+    return false;
+  }
+}
+
 export async function classifyAndSend(summary: string, link: string): Promise<{ success: boolean; message: string }> {
   try {
     // 1. Call /api/classify to get the type
@@ -25,37 +73,12 @@ export async function classifyAndSend(summary: string, link: string): Promise<{ 
     // 2. Based on type:
     if (type === 'Product') {
       // If Product -> send to Discord via webhook
-      const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
-      if (!discordWebhookUrl) {
-        console.warn('DISCORD_WEBHOOK_URL not configured. Skipping Discord notification.');
-        return { success: false, message: 'Discord webhook URL not configured.' };
+      const sentToDiscord = await sendToDiscord(summary, type, link);
+      if (sentToDiscord) {
+        return { success: true, message: 'Successfully sent to Discord webhook.' };
+      } else {
+        return { success: false, message: 'Failed to send to Discord webhook.' };
       }
-
-      const discordPayload = {
-        content: `New Product Update! \nSummary: ${summary}\nLink: ${link}`,
-        embeds: [{
-          title: "New Product Update",
-          description: summary,
-          url: link,
-          color: 3447003 // Blue color for Discord embeds
-        }]
-      };
-
-      const discordResponse = await fetch(discordWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(discordPayload),
-      });
-
-      if (!discordResponse.ok) {
-        const discordErrorText = await discordResponse.text();
-        console.error('Failed to send to Discord webhook:', { status: discordResponse.status, error: discordErrorText });
-        return { success: false, message: `Failed to send to Discord: ${discordResponse.status} - ${discordErrorText}` };
-      }
-      console.log('Successfully sent to Discord webhook.');
-      return { success: true, message: 'Successfully sent to Discord webhook.' };
 
     } else if (type === 'Team') {
       // If Team -> send via Gmail API (or log for now)
