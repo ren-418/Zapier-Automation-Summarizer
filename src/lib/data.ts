@@ -26,6 +26,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 interface WebhookData {
   title: string;
   content: string;
+  summary: string;
   timestamp: string;
 }
 
@@ -78,6 +79,31 @@ import { classifyAndSend } from './classifyAndSend';
 
 // Add a new post
 export async function addPost(post: Omit<Post, 'id' | 'date'>): Promise<Post> {
+  // Generate a summary for the post
+  let summary = '';
+  try {
+    const summarizeResponse = await fetch('http://localhost:3000/api/summarize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: post.title,
+        content: post.content,
+      }),
+    });
+
+    if (summarizeResponse.ok) {
+      const { summary: generatedSummary } = await summarizeResponse.json();
+      summary = generatedSummary;
+      console.log('Generated summary:', summary);
+    } else {
+      console.error('Failed to generate summary:', await summarizeResponse.text());
+    }
+  } catch (error) {
+    console.error('Error generating summary:', error);
+  }
+
   const newPost: Post = {
     id: crypto.randomUUID(),
     date: new Date(),
@@ -86,7 +112,7 @@ export async function addPost(post: Omit<Post, 'id' | 'date'>): Promise<Post> {
 
   posts.push(newPost);
 
-  // Send to Zapier webhook
+  // Send to Zapier webhook with the summary
   try {
     const webhookUrl = process.env.ZAPIER_WEBHOOK_URL;
     if (!webhookUrl) {
@@ -95,18 +121,18 @@ export async function addPost(post: Omit<Post, 'id' | 'date'>): Promise<Post> {
       await sendWebhookWithRetry(webhookUrl, {
         title: post.title,
         content: post.content,
+        summary: summary, // Include the generated summary
         timestamp: newPost.date.toISOString(),
       });
     }
   } catch (error) {
-    // Log the error but don't fail the post creation
     console.error('Failed to send post to Zapier webhook:', error);
   }
 
   // Call classifyAndSend after sending to Zapier
   try {
-    const classificationSummary = `New blog post: ${post.title}. Content preview: ${post.content.substring(0, 100)}...`;
-    const classificationLink = `http://localhost:3000/posts/${newPost.id}`; // Placeholder link
+    const classificationSummary = summary || `New blog post: ${post.title}. Content preview: ${post.content.substring(0, 100)}...`;
+    const classificationLink = `http://localhost:3000/posts/${newPost.id}`;
 
     console.log('Calling classifyAndSend...');
     const classificationResult = await classifyAndSend(classificationSummary, classificationLink);
