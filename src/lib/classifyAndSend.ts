@@ -50,27 +50,11 @@ async function sendToDiscord(summary: string, type: "Product" | "Team" | "Other"
   }
 }
 
-export async function classifyAndSend(summary: string, link: string): Promise<{ success: boolean; message: string }> {
+export async function classifyAndSend(summary: string, type: "Product" | "Team" | "Other", link: string): Promise<{ success: boolean; message: string }> {
   try {
-    // 1. Call /api/classify to get the type
-    const classifyResponse = await fetch('http://localhost:3000/api/classify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ summary }),
-    });
+    // Type is now passed directly, no need to call /api/classify here
 
-    if (!classifyResponse.ok) {
-      const errorText = await classifyResponse.text();
-      console.error('Failed to classify summary:', { status: classifyResponse.status, error: errorText });
-      return { success: false, message: `Classification failed: ${classifyResponse.status} - ${errorText}` };
-    }
-
-    const { type }: ClassificationResult = await classifyResponse.json();
-    console.log(`Classified summary as: ${type}`);
-
-    // 2. Based on type:
+    // Based on type:
     if (type === 'Product') {
       // If Product -> send to Discord via webhook
       const sentToDiscord = await sendToDiscord(summary, type, link);
