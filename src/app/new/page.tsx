@@ -2,10 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import emailjs from '@emailjs/browser';
 
 interface FormErrors {
   title?: string;
   content?: string;
+}
+
+// Initialize EmailJS once on the client side
+// Ensure EMAILJS_PUBLIC_KEY is available as a public environment variable (NEXT_PUBLIC_ prefix)
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY) {
+  emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY);
 }
 
 export default function NewPost() {
@@ -58,10 +65,56 @@ export default function NewPost() {
         throw new Error('Failed to create post');
       }
 
+      const newPost = await response.json(); // Get the created post with its type
+
       setMessage({
         type: 'success',
         text: 'Post created successfully! Redirecting to blog...',
       });
+
+      // Handle EmailJS sending for 'Team' classified posts on the client-side
+      if (newPost.type === 'Team') {
+        const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+        const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY; // Already initialized
+        const receiverEmail = process.env.NEXT_PUBLIC_EMAILJS_RECEIVER_EMAIL || 'wcat06821@gmail.com';
+
+        if (serviceId && templateId && publicKey && receiverEmail) {
+          console.log('EmailJS Debug: All variables present.');
+          console.log('EmailJS Debug: serviceId:', serviceId);
+          console.log('EmailJS Debug: templateId:', templateId);
+          console.log('EmailJS Debug: publicKey:', publicKey);
+          console.log('EmailJS Debug: receiverEmail (to_email):', receiverEmail);
+          console.log('EmailJS Debug: Template Params:', {
+            summary: `New post: ${newPost.title}. ${newPost.content.substring(0, 150)}...`,
+            link: `http://localhost:3000/posts/${newPost.id}`,
+            to_email: receiverEmail,
+            subject: `Team Update: ${newPost.title.substring(0, 50)}...`,
+          });
+
+          try {
+            await emailjs.send(
+              serviceId,
+              templateId,
+              {
+                summary: `New post: ${newPost.title}. ${newPost.content.substring(0, 150)}...`,
+                link: `http://localhost:3000/posts/${newPost.id}`,
+                to_email: receiverEmail,
+                subject: `Team Update: ${newPost.title.substring(0, 50)}...`,
+              },
+            );
+            console.log('EmailJS: Team update email sent successfully!');
+          } catch (emailError) {
+            console.error('EmailJS: Failed to send Team update email:', emailError);
+          }
+        } else {
+          console.warn('EmailJS: Missing environment variables for Team email. Skipping.');
+          if (!serviceId) console.warn('EmailJS: serviceId is missing.');
+          if (!templateId) console.warn('EmailJS: templateId is missing.');
+          if (!publicKey) console.warn('EmailJS: publicKey is missing.');
+          if (!receiverEmail) console.warn('EmailJS: receiverEmail is missing.');
+        }
+      }
 
       // Reset form
       setTitle('');

@@ -5,7 +5,7 @@ import { Post } from "@/lib/data";
 import PostCard from "@/components/PostCard";
 
 async function getPosts(): Promise<Post[]> {
-  const res = await fetch("http://localhost:3000/api/posts", {
+  const res = await fetch("/api/posts", {
     cache: "no-store",
   });
 
