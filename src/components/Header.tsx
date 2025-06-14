@@ -12,6 +12,7 @@ const Header = () => {
     { name: 'Home', href: '/' },
     { name: 'Work With Me', href: '/work-with-me' },
     { name: 'Blog', href: '/blog' },
+    { name: 'Post', href: '/new' },
     { name: 'Contact', href: '/contact' },
   ];
 
@@ -27,7 +28,7 @@ const Header = () => {
         {/* Logo/App Name */}
         <Link href="/" className="flex items-center space-x-2 text-xl font-bold">
           {/* Placeholder for actual logo icon */}
-          <span className="font-sans">Jonah Altman</span>
+          <span className="font-sans">Zapier</span>
         </Link>
 
         {/* Desktop Navigation */}

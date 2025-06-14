@@ -58,9 +58,11 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     day: 'numeric',
   });
 
+  const dateObject = new Date(post.date);
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-4xl">
-      <Link href="/" className="text-accent hover:underline flex items-center mb-8">
+      <Link href="/blog" className="text-accent hover:underline flex items-center mb-8">
         <ChevronLeftIcon className="h-5 w-5 mr-1" /> Back to all posts
       </Link>
 
@@ -68,7 +70,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
         <h1 className="text-4xl sm:text-5xl font-extrabold mb-4 text-text leading-tight">{post.title}</h1>
         
         <div className="flex items-center space-x-4 mb-6 text-tertiary text-sm">
-          <time dateTime={post.date.toISOString()}>{formattedDate}</time>
+          <time dateTime={dateObject.toISOString()}>{formattedDate}</time>
           <span className={typeBadgeClasses}>{post.type}</span>
         </div>
 
