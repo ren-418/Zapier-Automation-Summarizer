@@ -2,6 +2,38 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### 1. Environment Variables Setup
+
+Create a `.env.local` file in the root of your project and add the following environment variables. Replace the placeholder values with your actual credentials and desired settings.
+
+```
+# Optional: Discord Webhook URL for 'Product' classified posts
+DISCORD_WEBHOOK_URL=your_discord_webhook_url
+
+# EmailJS Configuration for 'Team' classified posts
+EMAILJS_SERVICE_ID=your_emailjs_service_id
+EMAILJS_TEMPLATE_ID=your_emailjs_template_id
+EMAILJS_PUBLIC_KEY=your_emailjs_public_key
+EMAILJS_RECEIVER_EMAIL=your_target_email@example.com
+
+# Optional: Zapier Webhook URL for all new posts
+ZAPIER_WEBHOOK_URL=your_zapier_webhook_url
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+### 3. Run the Development Server
+
 First, run the development server:
 
 ```bash
@@ -16,7 +48,9 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Data Persistence
+
+Blog posts are persisted to `src/data/posts.json`. This file will be automatically created and updated when you add new posts.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

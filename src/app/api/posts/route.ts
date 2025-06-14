@@ -3,7 +3,7 @@ import { getPosts, addPost } from '@/lib/data';
 
 export async function GET() {
   try {
-    const posts = getPosts();
+    const posts = await getPosts();
     return NextResponse.json(posts);
   } catch (error: unknown) {
     console.error('Error fetching posts:', error);

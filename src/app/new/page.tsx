@@ -60,7 +60,7 @@ export default function NewPost() {
 
       setMessage({
         type: 'success',
-        text: 'Post created successfully! Redirecting...',
+        text: 'Post created successfully! Redirecting to blog...',
       });
 
       // Reset form
@@ -68,9 +68,9 @@ export default function NewPost() {
       setContent('');
       setErrors({});
 
-      // Redirect to home page after 2 seconds
+      // Redirect to blog page after 2 seconds
       setTimeout(() => {
-        router.push('/');
+        router.push('/blog');
       }, 2000);
     } catch (error: unknown) {
       console.error('Error creating post:', error);
